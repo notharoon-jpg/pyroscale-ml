@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Explore wildfire hotspots | PyroScale</title>
+<meta name="description" content="Explore the fire seasons of places you care about with NASA satellite observations and monthly hotspot forecasts.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pyroscale-base.css">
+<link rel="stylesheet" href="pyroscale-ui.css?v=landing-refresh">
+<link rel="stylesheet" href="pyroscale-map.css?v=explore-page">
+</head><body class="dc">
+<div class="pn gl"><div id="gl" role="region" aria-label="Interactive 3D globe of hotspot activity"></div>
+<div class="map-ui" id="map-ui" data-style="satellite">
+  <div class="map-top">
+    <div class="map-filterbar">
+      <div class="map-place-search">
+        <label class="sr-only" for="map-query">Search cities or countries</label>
+        <input id="map-query" type="search" placeholder="Search cities or countries" autocomplete="off" aria-controls="map-results">
+        <ul id="map-results" hidden></ul>
+      </div>
+      <label class="sr-only" for="map-region">Region preset</label>
+      <select id="map-region"></select>
+      <div class="seg" role="group" aria-label="Map layer">
+        <label><input type="radio" name="vm" value="o" checked>Observed</label>
+        <label><input type="radio" name="vm" value="f">Forecast</label>
+        <label><input type="radio" name="vm" value="r">Activity</label>
+        <label><input type="radio" name="vm" value="x" id="vmx">Scenario</label>
+      </div>
+    </div>
+    <div class="ov map-sublayers" id="fxl" hidden>
+      <div class="seg" role="group" aria-label="Scenario layer">
+        <label><input type="radio" name="fx" value="s" checked>Scenario</label>
+        <label><input type="radio" name="fx" value="b">Baseline</label>
+        <label><input type="radio" name="fx" value="c">Change</label>
+      </div>
+      <div class="scenario-context">
+        <button id="edit-scenario" type="button" aria-controls="dr">Scenario settings <span aria-hidden="true">↗</span></button>
+        <p id="scenario-map-year" hidden></p>
+      </div>
+    </div>
+    <div class="ov" id="fcl" hidden></div>
+    <p id="map-style-status" class="map-notice" role="status"></p>
+    <div class="map-draw-row">
+      <button id="map-draw" class="draw-shortcut" type="button" aria-pressed="false" aria-describedby="map-draw-help">Draw area</button>
+      <span id="map-draw-help" class="sr-only">Draw a box on the globe to analyze hotspots in that area.</span>
+      <p id="draw-status" class="map-notice draw-notice" role="status" hidden>Drag on the globe to select an area, or tap to select a small box.</p>
+    </div>
+  </div>
+  <section class="map-overview" aria-labelledby="map-overview-title">
+    <div class="map-overview-meta">
+      <h2 id="map-overview-title">Global</h2>
+      <p id="map-overview-period"></p>
+    </div>
+    <div class="map-overview-total">
+      <strong id="map-overview-value">–</strong>
+      <p id="map-overview-measure"></p>
+    </div>
+    <div id="map-overview-chart"></div>
+  </section>
+  <div class="forecast-timeline" id="fkl" role="group" aria-label="Forecast timeline" hidden>
+    <button id="forecast-play" type="button" aria-label="Play forecast months" title="Play forecast months"><span aria-hidden="true">▶</span></button>
+    <div class="timeline-range">
+      <label for="fk">Forecast month</label><output id="fkv" for="fk"></output>
+      <input id="fk" type="range" min="1" max="24" value="1">
+      <span class="timeline-start" id="timeline-start" aria-hidden="true"></span>
+      <span class="timeline-end" id="timeline-end" aria-hidden="true"></span>
+    </div>
+  </div>
+  <div class="ov map-tools" aria-label="Globe controls">
+    <details class="map-style-menu">
+      <summary>Globe style</summary>
+      <div>
+        <fieldset>
+          <legend>Globe style</legend>
+          <label><input type="radio" name="basemap" value="satellite" checked><span><strong>Standard HD</strong><small>Natural-color Earth imagery</small></span></label>
+          <label><input type="radio" name="basemap" value="space"><span><strong>Space HD</strong><small>High-resolution Earth and the Milky Way</small></span></label>
+          <label><input type="radio" name="basemap" value="mono"><span><strong>Monochrome</strong><small>Country borders and colored hotspots</small></span></label>
+        </fieldset>
+      </div>
+    </details>
+    <button id="map-legend" type="button" aria-controls="lgd" aria-pressed="true">Legend</button>
+    <button id="map-export" type="button">Export data</button>
+    <button id="zoom-in" type="button" aria-label="Zoom in" title="Zoom in">+</button>
+    <button id="zoom-out" type="button" aria-label="Zoom out" title="Zoom out">−</button>
+    <button id="gr" type="button" aria-label="Reset globe view" title="Reset globe view">⌖</button>
+    <details class="map-settings">
+      <summary aria-label="Map settings" title="Map settings">⚙</summary>
+      <div>
+        <div class="seg" role="group" aria-label="Pointer mode">
+          <label><input type="radio" name="gm" value="r" checked>Rotate</label>
+          <label><input type="radio" name="gm" value="d">Draw area</label>
+        </div>
+        <label class="ck"><input type="checkbox" id="ga">Auto-rotate</label>
+        <label class="ck"><input type="checkbox" id="gn">Day and night</label>
+      </div>
+    </details>
+  </div>
+  <section class="ov bot" id="lgd" aria-labelledby="legend-title">
+    <h2 id="legend-title">Map legend</h2>
+    <div id="legend-content"></div>
+  </section>
+  <span class="demo-status" id="demo-status">Loading observations…</span>
+  <div class="map-credit">
+    <a id="map-earth-credit" href="https://science.nasa.gov/earth/earth-observatory/the-blue-marble-true-color-global-imagery-at-1km-resolution/" target="_blank" rel="noopener">NASA Earth Observatory</a>
+    <a id="map-border-credit" href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>
+    <a id="map-space-credit" href="https://www.eso.org/public/images/eso0932a/" target="_blank" rel="noopener" hidden>ESO/S. Brunier <span>(resized and tinted)</span></a>
+  </div>
+</div></div>
+
+<header class="map-header" id="map-header" aria-label="Globe workspace">
+  <a id="home" href="./"><span aria-hidden="true">←</span> Home</a>
+  <span class="workspace-name"><strong>PyroScale</strong><span class="workspace-description">Hotspot explorer</span></span>
+  <div class="hr">
+    <button id="head-forecast" type="button">Forecast<span class="forecast-suffix"> &amp; model</span></button>
+    <button id="dt" type="button" aria-controls="dr" aria-expanded="false"><span class="analysis-icon" aria-hidden="true"></span><span>Analysis</span></button>
+  </div>
+</header>
+
+<dialog id="globe-picker" aria-labelledby="globe-picker-title">
+  <form method="dialog">
+    <h2 id="globe-picker-title">Choose your globe view</h2>
+    <p>You can change this later using Globe style on the map.</p>
+    <fieldset class="globe-choices">
+      <legend class="sr-only">Globe view</legend>
+      <label><input type="radio" name="launch-style" value="satellite" checked autofocus><span class="globe-option globe-standard"><strong>Standard HD</strong><small>Natural-color Earth · Default</small></span></label>
+      <label><input type="radio" name="launch-style" value="space"><span class="globe-option globe-space"><strong>Space HD</strong><small>Natural-color Earth with the Milky Way</small></span></label>
+      <label><input type="radio" name="launch-style" value="mono"><span class="globe-option globe-mono"><strong>Monochrome</strong><small>Grayscale Earth and colored hotspots</small></span></label>
+    </fieldset>
+    <div class="picker-actions">
+      <a class="picker-back" href="./">Back to home</a>
+      <button class="p" type="submit">Open globe <span aria-hidden="true">↗</span></button>
+    </div>
+  </form>
+</dialog>
+
+<aside id="dr" aria-label="Fire activity analysis" inert>
+  <div class="panel-heading"><div><h2 id="panel-title">Area analysis</h2><p id="panel-region">Global</p></div><button id="close-panel" type="button" aria-label="Close analysis">×</button></div>
+  <nav id="tabs" aria-label="Analysis sections">
+    <button type="button" data-t="x" class="on" aria-current="true">Explore</button>
+    <button type="button" data-t="m">Forecast</button>
+    <button type="button" data-t="c">Places</button>
+    <button type="button" data-t="p">Point</button>
+    <button type="button" data-t="d">Data Lab</button>
+    <button type="button" data-t="f">Scenario</button>
+  </nav>
+  <div class="tp" data-t="x"><div class="wrap">
+<div>
+<div class="pn"><h2>Area of interest</h2>
+<div class="area-shortcut">
+  <button id="panel-draw" class="draw-shortcut" type="button" aria-pressed="false" aria-describedby="panel-draw-help">Draw area</button>
+  <p id="panel-draw-help">Drag a box on the globe to analyze that area, or tap the globe for a small box. Charts update when you finish.</p>
+</div>
+<label for="pre">Region</label><select id="pre"></select>
+<div class="g2">
+<div><label for="n">North latitude</label><input id="n" type="number" step="0.5"></div>
+<div><label for="s">South latitude</label><input id="s" type="number" step="0.5"></div>
+<div><label for="w">West longitude</label><input id="w" type="number" step="0.5"></div>
+<div><label for="e">East longitude</label><input id="e" type="number" step="0.5"></div></div>
+<p class="hint">Choose a region or enter its bounds. Set west greater than east for a box crossing the date line.</p></div>
+<div class="pn"><h2>Period and view</h2>
+<div class="g2"><div><label for="f">From</label><input id="f" type="month" value="2001-01" min="2001-01" max="2026-10"></div>
+<div><label for="t">To</label><input id="t" type="month" value="2026-10" min="2001-01" max="2026-10"></div></div>
+<label for="cy">Compare year in seasonal chart</label><select id="cy" style="margin-bottom:10px"></select>
+<small>Hotspot record</small>
+<div class="seg"><label><input type="radio" name="dm" value="v" checked>Suomi-NPP</label><label><input type="radio" name="dm" value="j">NOAA-20</label><label><input type="radio" name="dm" value="m">Terra</label><label><input type="radio" name="dm" value="r">Sensor history</label><label><input type="radio" name="dm" value="h">Reference + estimates</label></div>
+<small>Calendar shows</small>
+<div class="seg"><label><input type="radio" name="cm" value="c" checked>Hotspot count</label><label><input type="radio" name="cm" value="a">Anomaly</label></div>
+<label for="ld">Load your JSON files: the data file, the forecast file, or both together</label><input id="ld" type="file" accept=".json,application/json" multiple style="margin-bottom:10px"><button class="p" id="ex">Export data</button></div>
+<div class="pn"><h2>Context layers</h2>
+<label class="ck"><input type="checkbox" id="lw">Weather and drought (ERA5)</label>
+<label class="ck"><input type="checkbox" id="lx">Wind and air quality now</label>
+<p class="hint">Off by default and fetched only when switched on. Open-Meteo provides the context at the centre of your selection.</p></div>
+</div>
+<div>
+
+<div class="pn warn"><h2>Elevated hotspot activity</h2><p class="rks" id="rks">Loading forecast...</p>
+<div class="rctl"><label for="rs">Sensitivity<select id="rs"><option value="c">Cautious, 80th percentile</option><option value="s" selected>Standard, 90th percentile</option><option value="t">Strict, 95th percentile</option></select></label><label class="ck"><input type="checkbox" id="rkm">Only my selected area</label></div>
+<ul id="rkl"></ul>
+<p class="note" style="margin:8px 0 0">Activity flags compare the first forecast month with the NOAA-20 seasonal record, using a minimum of 20 detections. Use local authorities for operational alerts.</p></div>
+<div class="kp" id="kp"></div>
+<div class="pn hero"><h2 id="ct" tabindex="-1">Burning activity calendar</h2><p class="note" id="cn"></p><div id="cal"></div><div class="lg" id="lg"></div></div>
+<div class="ch">
+<div class="pn"><h2>Seasonal profile</h2><p class="note" id="sn"></p><div id="sc"></div></div>
+<div class="pn"><h2>Annual totals by record</h2><p class="note">Terra is dashed gray and Suomi-NPP is solid. A year needs all 12 months to appear.</p><div id="an"></div></div></div>
+<div class="pn"><h2>Anomaly alerts</h2><p class="note">Months in the last 12 of the selected period that reach 150% of the same calendar month’s median.</p><ul id="al" aria-live="polite"></ul></div>
+<div class="pn" id="wx" hidden><h2>Weather and drought context</h2><p class="note" id="wn"></p><div id="wc"></div><p class="note" id="wk" style="margin:8px 0 0"></p></div>
+<div class="pn" id="wd" hidden><h2>Wind and air quality</h2><p id="wdt" style="margin:0">Loading...</p></div>
+<details class="pn"><summary>Method and data notes</summary>
+<p>This globe counts NASA FIRMS thermal-anomaly detections in monthly 3° cells. An anomaly can be a fire pixel, a gas flare or another heat source. Repeated overpasses can count the same fire more than once.</p>
+<p>Terra MODIS, Suomi-NPP VIIRS and NOAA-20 VIIRS are separate observed series. The experimental estimate places earlier Terra counts on a Suomi-NPP-like scale where the fit has support. Archive-day checks identify gaps in the record. Cloud-free coverage varies.</p>
+<p><a href="https://source.coop/portolan-mirrors/firms-catalog">FIRMS archive source</a> · <a href="pyroscale_harmonization_report.json">Harmonization validation</a> · <a href="pyroscale_forecast_report.json">Forecast validation</a></p></details>
+</div></div></div>
+<div class="tp" data-t="m" hidden>
+  <section class="pn forecast-card">
+    <h2>Monthly hotspot outlook</h2>
+    <p class="note" id="on"></p>
+    <div id="oc"></div>
+    <div id="forecast-key" class="forecast-key" hidden><span>Observed</span><span>Forecast</span><span>Seasonal median</span></div>
+    <p class="note" id="ok"></p>
+  </section>
+  <section class="pn model-card">
+    <h2>Model &amp; validation</h2>
+    <div class="model-source"><span id="tf" role="status">Forecast loading…</span><span id="tg">Loading observations…</span></div>
+    <p class="note" id="model-summary"></p>
+    <dl class="model-skill" id="model-skill" hidden></dl>
+    <p class="note" id="model-window"></p>
+  </section>
+  <section class="pn">
+    <h2>Reading the map</h2>
+    <p class="note">Each glow marks the centre of a 3° cell, roughly 330 km north to south. It represents aggregated detections across the cell.</p>
+    <p class="note">The forecast estimates NOAA-20 detections. The activity layer uses the same calendar month in the NOAA-20 history for comparison.</p>
+  </section>
+</div>
+<div class="tp" data-t="c" hidden>
+<div class="pn"><h2>Countries and cities</h2>
+<p class="note">Pick any countries and cities, as many as you like. Country filters use Natural Earth boundaries. A cell spanning a border contributes by area to country summaries. City selections group nearby cells.</p>
+<input id="pq" type="search" placeholder="Search any country or city" autocomplete="off" aria-label="Search countries and cities">
+<ul id="pr" class="pres"></ul>
+<div class="chips" id="pch" style="margin-top:10px"></div>
+<div class="g2"><div><label for="prr">A city includes cells within</label><select id="prr"><option value="0">the cell containing it</option><option value="100">100 km</option><option value="250" selected>250 km</option><option value="500">500 km</option></select></div><div><label>&nbsp;</label><button id="pcl">Clear selection</button></div></div>
+<p class="note" id="pnt"></p>
+<label for="pfl">City directory file (pyroscale_places.json)</label><input id="pfl" type="file" accept=".json,application/json"><p class="note" id="pfm" style="margin:6px 0 0"></p></div>
+<div id="pcards"></div>
+</div>
+<div class="tp" data-t="p" hidden><div class="pn" id="ci"><p class="note" style="margin:0">Select a hotspot on the globe to see its activity and forecast.</p></div></div>
+<div class="tp" data-t="d" hidden>
+<div class="pn"><h2>Datasets</h2><p class="note">Tick as many datasets as you like. They are compared across the grid cells in your scope.</p>
+<div class="rctl"><button id="dla">Select all</button><button id="dln">Clear</button><label class="ck"><input type="checkbox" id="dlw">Whole world, not just my area</label></div>
+<div id="dll"></div>
+<label for="dlf" style="margin-top:10px">Add your own datasets: CSV files with lat, lon and numeric columns</label><input id="dlf" type="file" accept=".csv,text/csv" multiple><p class="note" id="dlm" style="margin:6px 0 0"></p></div>
+<div class="pn"><h2>Analysis</h2><div id="dls"></div><div id="dlc"></div>
+<h2 style="margin-top:14px">Compare two datasets</h2><div class="g2"><div><label for="dx1">X axis</label><select id="dx1"></select></div><div><label for="dy1">Y axis</label><select id="dy1"></select></div></div><div id="dsc"></div>
+<h2 style="margin-top:14px">Top cells</h2><label for="dtp">Ranked by</label><select id="dtp"></select><ul id="dtl"></ul></div>
+<div class="pn"><h2>Ask the analyst</h2><p class="note" id="aim">Answers are calculated in your browser using the selected data.</p><div class="chat" id="aic"></div><div class="chips" id="aip"></div><textarea id="aiq" placeholder="Ask about the selected datasets, an area, projected activity, or a what-if scenario" aria-label="Question for the analyst"></textarea><div class="row"><button class="p" id="ais">Ask</button></div></div>
+</div>
+<div class="tp" data-t="f" hidden>
+<div class="pn"><h2>Scenario lab</h2>
+<p class="note">Adjust hypothetical multipliers for warming, rainfall, ignitions and fuel management. Results show arithmetic sensitivity to your inputs within each cell.</p>
+<div class="lv"><label for="l1">Warming by the chosen year <b id="v1">+0 °C</b></label><input type="range" id="l1" min="0" max="4" step="0.5" value="0"></div>
+<div class="lv"><label for="l2">Rainfall change <b id="v2">0%</b></label><input type="range" id="l2" min="-30" max="30" step="5" value="0"></div>
+<div class="lv"><label for="l3">Human burning and ignitions <b id="v3">0%</b></label><input type="range" id="l3" min="-80" max="50" step="5" value="0"></div>
+<div class="lv"><label for="l4">Fuel management and suppression <b id="v4">0%</b></label><input type="range" id="l4" min="0" max="50" step="5" value="0"></div>
+<div class="lv"><label for="l5">Target year <b id="v5">2040</b></label><input type="range" id="l5" min="2027" max="2060" step="1" value="2040" aria-describedby="scenario-year-help"><p class="note" id="scenario-year-help">2040 is the default horizon for this what-if scenario. Change the target year, then run the scenario to compare it with the baseline.</p></div>
+<label class="ck"><input type="checkbox" id="lsw">Apply to the whole world, not just my selected area</label>
+<details><summary>Assumptions</summary><div class="g2"><div><label for="a1">Change in fire activity per +1 °C (%)</label><input id="a1" type="number" value="15" step="1"></div><div><label for="a2">Change per 10% less rainfall (%)</label><input id="a2" type="number" value="8" step="1"></div></div><p class="note">The default multipliers are illustrative assumptions. The chart applies them to a reference based on observed detections, available forecasts and seasonal trends.</p></details>
+<div class="row" style="justify-content:flex-start;margin-top:10px"><button class="p" id="sr">Run scenario</button><button id="sx">Reset</button></div>
+<p id="scenario-status" class="note" role="status"></p><p class="note" style="margin:8px 0 0">Run with the default values to see the baseline path. Adjust a lever to compare a scenario.</p></div>
+<div class="pn" id="so" hidden><h2>Result</h2><p id="sot"></p><div id="soc"></div>
+<label for="sy">Move through time <b id="syl"></b></label><div class="row" style="justify-content:flex-start;align-items:center"><button id="sp">Play</button><input type="range" id="sy" min="0" max="100" value="100"></div>
+<h2 style="margin-top:12px">Biggest changes</h2><ul id="sol"></ul></div>
+</div></aside>
+<div id="tip" aria-hidden="true"></div>
+<dialog id="dx" aria-labelledby="export-title"><h2 id="export-title">Export fire activity data</h2><p class="note" id="export-scope"></p>
+<label for="export-data">Data</label>
+<select id="export-data"><option value="map">Current map layer by grid cell</option><option value="history">Observed monthly totals</option><option value="grid">Observed totals by grid cell</option></select>
+<label for="fx">Format</label>
+<select id="fx"><option value="csv">CSV spreadsheet</option><option value="geojson">GeoJSON map data</option></select>
+<textarea id="ta" readonly aria-label="Export preview"></textarea>
+<p class="note" id="export-status" role="status"></p>
+<div class="row"><button id="cp">Copy</button><button id="dl">Download</button><button class="p" id="cl">Close</button></div></dialog>
+<script src="assets/vendor/three-r128/three.min.js"></script>
+<script src="assets/vendor/three-r128/OrbitControls.js"></script>
+<script src="pyroscale-globe.js?v=explore-page"></script>
+<script src="pyroscale-export.js"></script>
+<script src="pyroscale-map.js?v=map-refinement"></script>
+<script src="pyroscale-explore.js"></script></body></html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PyroScale-AI | Global Fire Activity Explorer</title>
+<meta name="description" content="Explore the fire seasons of places you care about with NASA satellite observations and monthly hotspot forecasts.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pyroscale-base.css">
+<link rel="stylesheet" href="pyroscale-ui.css?v=landing-refresh">
+<link rel="stylesheet" href="pyroscale-home.css?v=section-reveal">
+</head><body class="landing">
+<main id="landing" class="landing-screen">
+  <nav class="landing-nav" aria-label="Page sections">
+    <a href="#hero-stage">Home</a>
+    <a href="#mission">Mission</a>
+    <a href="#science">Methodology</a>
+    <a href="#community">Community</a>
+    <a href="#team">Our Team</a>
+    <a class="nav-explore" href="explore.html">Explore <span aria-hidden="true">↗</span></a>
+  </nav>
+  <section class="hero-stage" id="hero-stage" aria-labelledby="hero-title">
+    <div class="hero-earth" aria-hidden="true">
+      <img src="assets/earth-landing-fallback.jpg" width="960" height="960" alt="" decoding="async" fetchpriority="high">
+      <canvas id="hero-planet" width="432" height="432" hidden></canvas>
+    </div>
+    <div class="home-width hero-layout">
+      <div class="intro">
+        <h1 id="hero-title" tabindex="-1"><span>Pyro</span><span>Scale</span></h1>
+        <p>Explore NASA’s satellite hotspot detections on a global 3° grid. Draw an area to compare seasons, check the monthly outlook, or try an illustrative what-if scenario.</p>
+        <div class="intro-actions">
+          <a class="launch" id="launch" href="explore.html">Explore the globe <span aria-hidden="true">↗</span></a>
+          <a class="intro-link" href="#mission">Read our mission <span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+      <div class="hero-bottom">
+        <div class="landing-credit">
+          <a href="https://science.nasa.gov/earth/earth-observatory/the-blue-marble-true-color-global-imagery-at-1km-resolution/" target="_blank" rel="noopener">NASA Earth imagery</a>
+          <a href="https://www.eso.org/public/images/eso0932a/" target="_blank" rel="noopener">ESO/S. Brunier sky imagery</a>
+          <button id="hero-motion" type="button" aria-pressed="false" hidden>Pause globe animation</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mission-section home-section" id="mission" aria-labelledby="mission-title">
+    <div class="home-width mission-layout">
+      <div class="mission-copy">
+        <p class="section-label">Our mission</p>
+        <h2 id="mission-title">Make decades of satellite hotspot data useful.</h2>
+        <p class="section-lede" id="mission-statement">PyroScale helps people explore regional detection patterns, compare seasons, and understand how a forecast performs.</p>
+        <p>MODIS and VIIRS see the Earth at different resolutions and times. PyroScale shows each satellite’s record and tests where their overlapping observations can support an experimental estimate for earlier years.</p>
+      </div>
+      <figure class="mission-image">
+        <div class="sensor-images">
+          <div><strong>Aqua MODIS <small>1 km</small></strong><img src="assets/nasa-modis-hotspots.jpg" width="720" height="480" loading="lazy" decoding="async" alt="MODIS image showing fire detections across northeast China."></div>
+          <div><strong>Suomi NPP VIIRS <small>375 m</small></strong><img src="assets/nasa-viirs-hotspots.jpg" width="720" height="480" loading="lazy" decoding="async" alt="VIIRS image of the same area with more detailed fire detections."></div>
+        </div>
+        <figcaption><span>Red marks show active fire detections in northeast China, Nov 6, 2015. The labels give each sensor’s hotspot detection resolution.</span><a href="https://science.nasa.gov/earth/earth-observatory/a-clearer-view-of-fire-87111/" target="_blank" rel="noopener">NASA Earth Observatory ↗</a></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="science-section home-section" id="science" aria-labelledby="science-title">
+    <div class="home-width science-layout">
+      <div>
+        <h2 id="science-title">How PyroScale works</h2>
+        <p>We group NASA FIRMS thermal anomalies into monthly grid cells and check where the archive has gaps.</p>
+      </div>
+      <div class="science-details">
+        <details>
+          <summary>Align the satellite records</summary>
+          <p>VIIRS can detect smaller hotspots than MODIS. We compare coincident cell-month counts from Terra and Suomi-NPP, and test the estimates on later months and unseen regions.</p>
+        </details>
+        <details>
+          <summary>Train and test the forecast</summary>
+          <p>The NOAA-20 outlook compares a Poisson LightGBM model with seasonal baselines on rolling historical forecasts. Each lead uses the selected method. Cell-level ranges appear where calibration data support them.</p>
+        </details>
+        <details>
+          <summary>Explore what-if scenarios</summary>
+          <p>Change hypothetical multipliers for warming, rainfall, ignitions, or fuel management and see how those assumptions affect detection estimates in the selected cells.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="community-section home-section" id="community" aria-labelledby="community-title">
+    <div class="home-width">
+      <div class="community-heading">
+        <h2 id="community-title">Start with a place you know.</h2>
+        <p>Try your hometown, a place you’ve visited, or a region you’re learning about. You can start with a quick search and follow whichever pattern catches your eye.</p>
+      </div>
+      <div class="community-paths">
+        <div><h3>Find a familiar place</h3><p>Search for a city or country, or draw a box around the area you’re curious about.</p><a href="explore.html?view=places">Search places <span aria-hidden="true">→</span></a></div>
+        <div><h3>Spot a pattern</h3><p>Open the calendar and look for months that keep lighting up. Do you see the same pattern every year?</p><a href="explore.html?view=calendar">Open the calendar <span aria-hidden="true">→</span></a></div>
+        <div><h3>See what might come next</h3><p>Pick a forecast month, look at the uncertainty range, then try changing one assumption in the Scenario lab.</p><a href="explore.html?view=forecast">See the forecast <span aria-hidden="true">→</span></a></div>
+      </div>
+      <p class="community-note">For current fire alerts and evacuation guidance, follow your local authorities.</p>
+    </div>
+  </section>
+
+  <section class="team-section home-section" id="team" aria-labelledby="team-title">
+    <div class="home-width">
+      <div class="team-heading">
+        <div>
+          <p class="section-label">Our team</p>
+          <h2 id="team-title">Phoenix Protocol</h2>
+          <p class="section-lede" id="team-intro">We’re building PyroScale for the NASA Space Apps Challenge.</p>
+        </div>
+        <button type="button" class="team-edit" id="edit-team">Edit team details</button>
+      </div>
+      <ul id="team-members" class="team-members">
+        <li><h3>Haroon Abbas Chaudhry</h3></li>
+        <li><h3>Zayan Muneer</h3></li>
+        <li><h3>Abdul Subhan</h3></li>
+        <li><h3>Ibrar Ahmed Sardar</h3></li>
+        <li><h3>Zaid Ali Sheikh</h3></li>
+        <li><h3>Shahmeer Abdullah Malik</h3></li>
+      </ul>
+      <p class="team-empty" id="team-empty" hidden>Team profiles will appear here.</p>
+    </div>
+  </section>
+
+  <footer class="home-footer" id="site-footer">
+    <div class="home-width">
+      <span><strong>PyroScale AI</strong><small>NASA Space Apps Challenge</small></span>
+      <nav aria-label="Footer"><a href="#mission">Mission</a><a href="#science">Methodology</a><a href="#team">Our Team</a><a href="#hero-stage">Back to top ↑</a></nav>
+    </div>
+  </footer>
+</main>
+
+<dialog id="team-editor" class="team-editor" aria-labelledby="team-editor-title">
+  <form id="team-form">
+    <h2 id="team-editor-title">Edit team details</h2>
+    <p class="note">Save a draft in this browser to preview it. The shared roster appears when you reload the page. Download the team file to share your changes with the site’s maintainers.</p>
+    <label for="team-name">Team name</label>
+    <input id="team-name" maxlength="80" placeholder="Your Space Apps team name">
+    <label for="team-description">Team introduction</label>
+    <textarea id="team-description" maxlength="360" rows="3"></textarea>
+    <div id="team-fields"></div>
+    <button type="button" id="add-member">Add a team member</button>
+    <button type="button" id="reset-team" hidden>Use shared team profile</button>
+    <p class="note" id="team-status" role="status"></p>
+    <div class="row team-actions"><button type="button" id="cancel-team">Cancel</button><button type="button" id="download-team">Download team file</button><button class="p" type="submit">Save draft</button></div>
+  </form>
+</dialog>
+<template id="team-member-fields">
+  <fieldset class="member-fields">
+    <legend>Team member</legend>
+    <label>Name<input name="name" maxlength="80" required></label>
+    <label>Role or contribution<input name="role" maxlength="90"></label>
+    <label>Short bio<textarea name="bio" maxlength="260" rows="2"></textarea></label>
+    <button type="button" data-remove>Remove member</button>
+  </fieldset>
+</template>
+
+<script src="pyroscale-home.js" defer></script>
+<script src="pyroscale-team.js?v=shared-roster" defer></script>
+</body></html>
